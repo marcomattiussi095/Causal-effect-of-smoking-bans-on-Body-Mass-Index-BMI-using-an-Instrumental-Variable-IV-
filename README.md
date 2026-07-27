@@ -57,11 +57,11 @@ health coverage: hlthplan  <br>
 Stata
 
 ## Findings
-The causal IV estimate for bmi indicates that smoking reduces bmi by 5.22 (bmi is measured in kg/m²). The intensity of the effect is large, and the negative relationship is in accordance with common sense. The estimates are statistically significant at a 1% level. When regressed on bmi2, the effect falls to 2.25 kg/m², which indicates that smoking significantly reduces body mass excess above the obesity threshold, although from a lesser magnitude. <br>
+The causal IV estimate for bmi indicates that smoking reduces bmi by aproximately 5.22 (bmi is measured in kg/m²) among individuals whose smoking behavior responds to workplace smoking bans. The intensity of the effect is large, and the negative relationship is in accordance with common sense. The estimates are statistically significant at a 1% level. When regressed on bmi2, the effect falls to 2.25 kg/m², which indicates that smoking significantly reduces body mass excess above the obesity threshold, although from a lesser magnitude. <br>
 When compared to the OLS estimates, the IV estimates are considerably larger. The OLS estimates indicate that smoking reduces the bmi by 1.58 kg/m² compared to nonsmokers, conditional on all observable controls and fixed effects. The intensity of the estimate is roughly 3x smaller than with IV. This difference is magnitude is only observed when OLS is estimated on bmi2 which indicates that smoking reduces the bmi by 0.64 kg/m² for individuals above the obesity threshold. All results are statistically significant at a 1%level. This suggests that the endogeneity issue brings the OLS estimates toward zero.
 
 ## Repository structure
 
 ## Limitations of model
 
-
+## Reproducability
