@@ -1,1 +1,370 @@
+*       DATASET
+********************************
 
+cd "your\folder"
+
+local years 98 99 00 01 02 03 04 05 06
+
+foreach y of local years {
+    import sasxport5 "CDBRFS`y'.XPT", clear
+	
+	
+	
+	
+    ******************
+    if inlist(`y',98,99) {
+        gen year = 1900 + `y'
+		drop if _bmi == 999
+        gen bmi = _bmi/10
+		gen smoking = smokeday
+    }
+	    else if inlist(`y', 0) {
+        gen year = 2000 + `y'
+		drop if _bmi2 == 999
+        gen bmi = _bmi2/10	
+		gen smoking = smokeday
+		}
+		else if inlist(`y', 1) {
+        gen year = 2000 + `y'
+		drop if _bmi2 == 999999
+        gen bmi = _bmi2/10000	
+		gen smoking = smokeday
+		gen race = race2
+		}
+		else if inlist(`y', 2) {
+        gen year = 2000 + `y'
+		drop if _bmi2 == 9999
+        gen bmi = _bmi2/100	
+		gen smoking = smokeday
+		gen race = race2
+		}
+		 else if inlist(`y', 3) {
+        gen year = 2000 + `y'
+		drop if _bmi3 == 9999
+        gen bmi = _bmi3/100
+		gen smoking = smokeday
+		gen race = race2
+		}
+		else if inlist(`y', 4) {
+        gen year = 2000 + `y'
+		drop if _bmi4 ==9999
+        gen bmi = _bmi4/100
+		gen smoking = smokeday
+		gen race= race2
+		}
+		else {
+        gen year = 2000 + `y'
+		drop if _bmi4 ==9999
+        gen bmi = _bmi4/100
+		gen smoking = smokday2
+		gen race=race2
+    }
+
+	****************
+    keep year _state bmi smoking smkwork sex age race educa ///
+         income2 marital ///
+         exerany genhlth physhlth menthlth hlthplan ///
+		 smkpublc indoors employ
+
+    foreach child in chld04 chld0512 chld1317 children {
+        capture keep `child'
+	}
+    save "brfss_`y'.dta", replace
+}
+
+use "brfss_98.dta", clear
+foreach y in 99 00 01 02 03 04 05 06 {
+    append using "brfss_`y'.dta"
+}
+
+save "master_brfss.dta", replace
+
+
+
+
+
+
+
+
+*       ANALYSIS
+********************************
+
+use "your\folder\master_brfss.dta"
+
+******variables
+
+drop if indoors >= 2 | indoors == .
+
+drop if employ > 2
+
+*smkpublc
+
+drop if age < 18 | age >= 65
+gen age_18_24 = (age <=24)
+gen age_25_34 = (age >24 & age<=34)
+gen age_35_44 = (age >34 & age <= 44)
+gen age_45_54 = (age >44 & age <= 54)
+gen age_55_64 = (age >54 & age <= 64)
+
+drop if bmi > 60| bmi < 12
+
+**treatment:
+drop if smoking == . | smoking > 3
+gen smoker = (smoking==2 | smoking ==1)
+gen non_smoker = (smoking==3)
+**IV:
+drop if smkpublc > 4
+drop if smkwork > 4
+gen iv_work = (smkwork ==1)
+gen iv_publc = (smkpublc == 1)
+
+gen female = (sex==2)
+
+drop if race >= 9
+gen white_no_hisp = (race == 1)
+gen black_no_hisp = (race == 2)
+gen race_other = (race > 2 & race <= 8)
+
+drop if educa == . | educa == 9
+gen quit_before_hs = (educa == 1 | educa == 2)
+gen some_hs = (educa ==3)
+gen completed_hs = (educa == 4)
+gen some_college = (educa == 5)
+gen completed_college = (educa == 6)
+
+drop if income2 == . | income2 > 8
+gen income_0_15k = (income2==1 | income2==2)
+gen income_15k_25k = (income2==3 | income2 == 4)
+gen income_25k_35k = (income2 ==5)
+gen income_35k_50k = (income2 == 6)
+gen income_50k_more = (income2==7 | income2 == 8)
+
+drop if marital == 9 | marital == .
+gen married = (marital == 1)
+gen divorced = (marital == 2)
+gen widowed = (marital == 3)
+gen separated = (marital == 4)
+gen never_married = (marital == 5 | marital ==6)
+
+drop if exerany2 == . | exerany2 == 7 | exerany2 == 9
+gen exercised_past_30 = (exerany2 == 1)
+gen no_exercise_past_30 = (exerany2 == 2)
+
+drop if genhlth == 9 | genhlth ==7 | genhlth == .
+gen excellent_health = (genhlth ==1)
+gen very_good_health = (genhlth ==2)
+gen good_health = (genhlth ==3)
+gen fair_health = (genhlth ==4)
+gen poor_health = (genhlth ==5)
+
+drop if menthlth == 77 | menthlth ==99 | menthlth == .
+replace menthlth = 0 if menthlth ==88
+
+drop if physhlth == 77 | physhlth ==99 | physhlth == .
+replace physhlth = 0 if physhlth ==88
+
+drop if hlthplan ==7 |hlthplan==9
+gen healthcare = (hlthplan ==1)
+gen no_healthcare = (hlthplan==2)
+
+
+*****descr stat
+
+estpost tabstat ///
+	bmi ///
+    smoker non_smoker ///
+    iv_work iv_publc ///
+    female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare, ///
+    stat(mean sd min max n) col(stat)
+
+esttab using "your\folder\table1.rtf", ///
+    cells("mean(fmt(2)) sd(fmt(2)) min(fmt(2)) max(fmt(2)) N(fmt(0))") ///
+    collabels("Mean" "SD" "Min" "Max" "N") ///
+    nonumbers noobs ///
+    title("Table 1. Descriptive statistics") ///
+	replace
+	
+eststo clear
+	
+******obesity metric
+
+gen bmi2 = max(0, bmi -30)
+sum bmi2
+
+
+*******ols reg
+
+gen is_smoking = (smoking == 1 | smoking == 2)
+
+eststo ols_bmi: reg bmi ///
+    smoker ///
+    female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare ///
+	i._state i.year, ///
+	vce(robust)
+	
+eststo ols_bmi2: reg bmi2 ///
+    smoker ///
+    female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare ///
+	i._state i.year, ///
+	vce(robust)
+
+esttab ols_bmi ols_bmi2 ///
+using "your\folder\ols.rtf", ///
+se star(* 0.10 ** 0.05 *** 0.01) ///
+    label ///
+    title("OLS Effect of Smoking on BMI and BMI2") ///
+		addnotes("All regressions include demographic, socioeconomic, and health controls.", ///
+         "State and year fixed effects are included." ///
+         "Robust standard errors in parentheses.") ///
+    mtitles("BMI" "BMI2") ///
+    stats(N r2, labels("Observations" "R-squared"))
+	
+eststo clear		
+		
+*******iv reg
+
+eststo iv_bmi: ivregress 2sls bmi ///
+	(smoker = iv_work iv_publc) ///
+	female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare ///
+	i._state i.year, ///
+	vce(robust)
+	
+eststo iv_bmi2: ivregress 2sls bmi2 ///
+	(smoker = iv_work iv_publc) ///
+	female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare ///
+	i._state i.year, ///
+	vce(robust)
+	
+esttab iv_bmi iv_bmi2 ///
+using "your\folder\iv.rtf", ///
+se star(* 0.10 ** 0.05 *** 0.01) ///
+    label ///
+    title("IV Effect of Smoking on BMI and BMI2") ///
+	addnotes("All regressions include demographic, socioeconomic, and health controls.", ///
+         "State and year fixed effects are included.", ///
+         "Robust standard errors in parentheses.")
+    mtitles("BMI" "BMI2") ///
+    stats(N r2, labels("Observations" "R-squared"))
+	
+eststo clear
+
+*********propensity score matching
+
+eststo psm_bmi: teffects psmatch (bmi) (smoker ///
+	female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare), ///
+    nneighbor(1) atet 
+	
+eststo psm_bmi2: teffects psmatch (bmi2) (smoker ///
+	female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare), ///
+    nneighbor(1) atet 
+	
+esttab psm_bmi psm_bmi2 ///
+using "your\folder\psm.rtf", ///
+se star(* 0.10 ** 0.05 *** 0.01) ///
+title("PSM Effect of Smoking on BMI and BMI2") ///
+mtitles("BMI" "BMI2") ///
+stats(N, labels("Observations"))
+	
+eststo clear
+
+
+*****inverse probability weighting
+
+eststo ipw_bmi: teffects ipw (bmi) (smoker ///
+	female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare), ///
+    ate
+	
+eststo ipw_bmi2: teffects ipw (bmi2) (smoker ///
+	female ///
+    age_18_24 age_25_34 age_35_44 age_45_54 age_55_64 ///
+    white_no_hisp black_no_hisp race_other ///
+    quit_before_hs some_hs completed_hs some_college completed_college ///
+    income_0_15k income_15k_25k income_25k_35k income_35k_50k income_50k_more ///
+    married divorced widowed separated never_married ///
+    exercised_past_30 no_exercise_past_30 ///
+    excellent_health very_good_health good_health fair_health poor_health ///
+    physhlth menthlth ///
+    healthcare no_healthcare), ///
+    ate
+	
+esttab ipw_bmi ipw_bmi2 ///
+using "your\folder\ipw.rtf", ///
+se star(* 0.10 ** 0.05 *** 0.01) ///
+title("PSM Effect of Smoking on BMI and BMI2") ///
+mtitles("BMI" "BMI2") ///
+stats(N, labels("Observations"))
+
+eststo clear
+	
