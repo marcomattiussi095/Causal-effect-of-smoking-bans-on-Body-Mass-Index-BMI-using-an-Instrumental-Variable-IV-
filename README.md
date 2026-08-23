@@ -65,3 +65,9 @@ When compared to the OLS estimates, the IV estimates are considerably larger. Th
 ## Limitations of model
 
 ## Reproducability
+Data is accessible on the BRFSS website: https://www.cdc.gov/brfss/annual_data/annual_data.htm <br>
+Years: 1998-2006 included <br>
+To run the code: <br>
+1. download all yearly datasets in the same repository <br>
+2. rename all the datasets under the same format: "CDBRFS**.XPT", **= 98,99,00,...,06 <br>
+3. Open stata and run the code from section "code" on gitHub, while updating "your\folder" with your repository pathway (multiple times)
