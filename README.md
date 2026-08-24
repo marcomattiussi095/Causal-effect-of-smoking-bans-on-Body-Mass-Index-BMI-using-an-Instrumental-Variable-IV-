@@ -61,6 +61,9 @@ The causal IV estimate for bmi indicates that smoking reduces bmi by aproximatel
 When compared to the OLS estimates, the IV estimates are considerably larger. The OLS estimates indicate that smoking reduces the bmi by 1.58 kg/m² compared to nonsmokers, conditional on all observable controls and fixed effects. The intensity of the estimate is roughly 3x smaller than with IV. This difference is magnitude is only observed when OLS is estimated on bmi2 which indicates that smoking reduces the bmi by 0.64 kg/m² for individuals above the obesity threshold. All results are statistically significant at a 1%level. This suggests that the endogeneity issue brings the OLS estimates toward zero.
 
 ## Repository structure
+Readme: general informations <br>
+Code: full Stata code <br>
+Tables:  list of all tables obtained through analysis, on word format.
 
 ## Limitations of model
 
